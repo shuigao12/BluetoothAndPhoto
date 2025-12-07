@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">CXR-M Samples</string>
+    <string name="hello_rokid">Hello Rokid!</string>
+    <string name="bluetooth_closed">Bluetooth closed</string>
+    <string name="bluetooth_permission_request">Need request permission</string>
+    <string name="ready">Ready</string>
+    <string name="button_open_bluetooth">Open System Bluetooth</string>
+    <string name="button_request_permission">Request Necessary Permissions</string>
+    <string name="button_to_init">Connect to Glasses</string>
+    <string name="title_activity_bluetooth_init">BluetoothInitActivity</string>
+    <string name="is_record">BT Connection Information Record</string>
+    <string name="not_record">Not Record</string>
+    <string name="device_record">Device Name:</string>
+    <string name="mac_address_record">MAC Address:</string>
+    <string name="uuid_record">UUID:</string>
+    <string name="reconnect">Reconnect</string>
+    <string name="scan">Start Scan</string>
+    <string name="stop_scan">Stop Scan</string>
+    <string name="title_activity_usage_selection">UsageSelectionActivity</string>
+    <string name="clear_items">Clear Items</string>
+    <string name="bt_connecting">Connecting</string>
+    <string name="bt_disconnect">Disconnect</string>
+    <string name="to_use_glasses">To Use Glasses</string>
+    <string name="title_activity_audio_usage">AudioUsageActivity</string>
+    <string name="title_activity_device_information">DeviceInformationActivity</string>
+    <string name="title_activity_picture">PictureActivity</string>
+    <string name="title_activity_media_file">MediaFileActivity</string>
+    <string name="title_activity_video">VideoActivity</string>
+    <string name="title_activity_custom_viewctivity">CustomViewctivity</string>
+    <string name="title_activity_custom_protocol">CustomProtocolActivity</string>
+    <string name="title_activity_aiscene">AISceneActivity</string>
+    <string name="title_activity_teleprompter_scene">TeleprompterSceneActivity</string>
+    <string name="title_activity_translation_scene">TranslationSceneActivity</string>
+</resources>

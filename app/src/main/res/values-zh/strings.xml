@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CXR-M示例</string>
+    <string name="hello_rokid">你好 乐奇！</string>
+    <string name="bluetooth_closed">蓝牙已关闭</string>
+    <string name="bluetooth_permission_request">需要获取蓝牙权限</string>
+    <string name="ready">就绪</string>
+    <string name="button_open_bluetooth">打开系统蓝牙</string>
+    <string name="button_request_permission">获取必要权限</string>
+    <string name="button_to_init">连接眼镜</string>
+    <string name="title_activity_bluetooth_init">蓝牙初始化</string>
+    <string name="is_record">蓝牙连接信息已记录</string>
+    <string name="not_record">未记录</string>
+    <string name="device_record">设备名:</string>
+    <string name="mac_address_record">MAC Address:</string>
+    <string name="uuid_record">UUID:</string>
+    <string name="reconnect">重连</string>
+    <string name="scan">开始扫描</string>
+    <string name="stop_scan">停止扫描</string>
+    <string name="title_activity_usage_selection">使用方法</string>
+    <string name="clear_items">清除</string>
+    <string name="bt_connecting">正在连接…</string>
+    <string name="bt_disconnect">断开</string>
+    <string name="to_use_glasses">使用眼镜</string>
+</resources>
