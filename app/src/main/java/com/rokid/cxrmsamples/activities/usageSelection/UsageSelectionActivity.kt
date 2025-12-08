@@ -6,6 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
@@ -14,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.rokid.cxrmsamples.R
 import com.rokid.cxrmsamples.dataBeans.UsageType
 import com.rokid.cxrmsamples.ui.theme.CXRMSamplesTheme
@@ -71,19 +75,6 @@ fun UsageSelectionScreen(onClick: (UsageType) -> Unit) {
                 onClick(UsageType.USAGE_TYPE_CUSTOM_PROTOCOL)
             }) {
                 Text(text = "自定义协议")
-            }
-
-
-            Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                onClick(UsageType.USAGE_TYPE_TELEPROMPTER)
-            }) {
-                Text(text = "提词器 场景")
-            }
-
-            Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                onClick(UsageType.USAGE_TYPE_TRANSLATION)
-            }) {
-                Text(text = "翻译 场景")
             }
 
         }

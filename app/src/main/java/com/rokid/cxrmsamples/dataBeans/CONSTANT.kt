@@ -24,8 +24,8 @@ object CONSTANT {
 
 
     // Client Secret -- copy from https://ar.rokid.com/ -->Account Center-->Credential information
-    const val CLIENT_SECRET = "e5058adf-97a2-11f0-961e-043f72fdb9c8"
-    fun getSNResource() = R.raw.sn_0a981387ebb845bc82db11f4ac9bffa3
+    const val CLIENT_SECRET = "ac4b4555-d295-11f0-961e-043f72fdb9c8"
+    fun getSNResource() = R.raw.d1617e9173d04e7285b66bb8e6c6c569
 
     const val CUSTOM_CMD = "rk_custom_key"
 
