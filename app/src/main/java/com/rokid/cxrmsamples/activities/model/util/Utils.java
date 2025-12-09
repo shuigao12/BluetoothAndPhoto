@@ -1,0 +1,19 @@
+package com.rokid.cxrmsamples.activities.model.util;
+
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+
+import androidx.core.graphics.BitmapCompat;
+
+public class Utils {
+    public static Bitmap small(Bitmap bitmap) {
+        int i = BitmapCompat.getAllocationByteCount(bitmap);
+        if (i > 12843623) {
+            Matrix matrix = new Matrix();
+            matrix.postScale(0.2f, 0.2f); //长和宽放大缩小的比例
+            Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            return resizeBmp;
+        }
+        else return bitmap;
+    }
+}

@@ -7,6 +7,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 import org.junit.Assert.*
+import org.pytorch.LiteModuleLoader
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -20,5 +24,34 @@ class ExampleInstrumentedTest {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.rokid.cxrmsamples", appContext.packageName)
+    }
+
+    @Test
+    fun testLoadPyTorchModel() {
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        val modelPath = assetFilePath(appContext, "1stage_optimized.ptl")
+        assertNotNull(modelPath)
+        val module = LiteModuleLoader.load(modelPath)
+        assertNotNull(module)
+    }
+
+    @Throws(IOException::class)
+    private fun assetFilePath(context: android.content.Context, assetName: String): String {
+        val file = File(context.filesDir, assetName)
+        if (file.exists() && file.length() > 0) {
+            return file.absolutePath
+        }
+
+        context.assets.open(assetName).use { `is` ->
+            FileOutputStream(file).use { os ->
+                val buffer = ByteArray(4 * 1024)
+                var read: Int
+                while (`is`.read(buffer).also { read = it } != -1) {
+                    os.write(buffer, 0, read)
+                }
+                os.flush()
+            }
+        }
+        return file.absolutePath
     }
 }

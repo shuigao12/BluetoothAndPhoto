@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
                         BluetoothState.BLUETOOTH_DISABLED -> {
                             viewModel.requestBluetoothEnable(openBluetoothLauncher)
                         }
+                        //状态满足后，进入初始化业务：
                         BluetoothState.BLUETOOTH_READY -> {
                             viewModel.toInit(this)
                         }

@@ -22,4 +22,14 @@
     <string name="bt_connecting">正在连接…</string>
     <string name="bt_disconnect">断开</string>
     <string name="to_use_glasses">使用眼镜</string>
+    <string name="title_activity_audio_usage">AudioUsageActivity</string>
+    <string name="title_activity_device_information">DeviceInformationActivity</string>
+    <string name="title_activity_picture">PictureActivity</string>
+    <string name="title_activity_media_file">MediaFileActivity</string>
+    <string name="title_activity_video">VideoActivity</string>
+    <string name="title_activity_custom_viewctivity">CustomViewctivity</string>
+    <string name="title_activity_custom_protocol">CustomProtocolActivity</string>
+    <string name="title_activity_aiscene">AISceneActivity</string>
+    <string name="title_activity_teleprompter_scene">TeleprompterSceneActivity</string>
+    <string name="title_activity_translation_scene">TranslationSceneActivity</string>
 </resources>

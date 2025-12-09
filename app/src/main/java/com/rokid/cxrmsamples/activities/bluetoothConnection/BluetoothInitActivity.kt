@@ -260,6 +260,7 @@ fun BluetoothInitScreen(
                 Button(onClick = disconnect, modifier = Modifier.fillMaxWidth(0.7f)) {
                     Text(text = stringResource(R.string.bt_disconnect))
                 }
+                //跳转到使用眼镜界面
                 Button(onClick = toUseGlasses, modifier = Modifier.fillMaxWidth(0.7f)) {
                     Text(text = stringResource(R.string.to_use_glasses))
                 }
