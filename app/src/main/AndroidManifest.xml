@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:allowBackup="true"
@@ -22,13 +23,11 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:largeHeap="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.CXRMSamples">
-        <activity
-            android:name=".activities.customProtocol.CustomProtocolActivity"
-            android:exported="false"
-            android:label="@string/title_activity_custom_protocol"
-            android:theme="@style/Theme.CXRMSamples" />
+        <!-- CustomProtocolActivity 已移除 -->
+
         <activity
             android:name=".activities.customView.CustomViewActivity"
             android:exported="false"
@@ -37,6 +36,8 @@
         <activity
             android:name=".activities.picture.PictureActivity"
             android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:label="@string/title_activity_picture"
             android:theme="@style/Theme.CXRMSamples" />
         <activity
@@ -55,6 +56,32 @@
             android:label="@string/title_activity_bluetooth_init"
             android:theme="@style/Theme.CXRMSamples" />
         <activity
+            android:name=".activities.picture.PictureListActivity"
+            android:exported="false"
+            android:label="@string/title_activity_picture"
+            android:theme="@style/Theme.CXRMSamples" />
+        <activity
+            android:name=".activities.picture.PictureDetailActivity"
+            android:exported="false"
+            android:label="@string/title_activity_picture"
+            android:theme="@style/Theme.CXRMSamples" />
+        <activity
+            android:name=".activities.picture.ExportActivity"
+            android:exported="false"
+            android:label="Export History"
+            android:theme="@style/Theme.CXRMSamples" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.rokid.cxrmsamples.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <activity
             android:name=".activities.main.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.CXRMSamples">
@@ -64,6 +91,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 注册自定义协议测试页 -->
+<!--        <activity-->
+<!--            android:name=".activities.customProtocol.CustomProtocolActivity"-->
+<!--            android:exported="false"-->
+<!--            android:label="自定义协议测试"-->
+<!--            android:theme="@style/Theme.CXRMSamples" />-->
     </application>
 
 </manifest>

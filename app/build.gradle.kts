@@ -39,6 +39,11 @@ android {
     buildFeatures {
         compose = true
     }
+
+    androidResources {
+        // Vosk 模型二进制不要被 aapt 压缩，否则解压后可能损坏
+        noCompress += listOf("ptl", "onnx", "mdl", "fst", "conf", "dubm", "ie", "stats")
+    }
 }
 
 dependencies {
@@ -88,6 +93,13 @@ dependencies {
     implementation("org.pytorch:pytorch_android_torchvision_lite:2.1.0")
     androidTestImplementation("org.pytorch:pytorch_android_lite:2.1.0")
 
+    // ---------- ONNX Runtime（android 包含 XNNPACK EP） ----------
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.18.0")
+
     // ---------- Excel 处理 ----------
     implementation("net.sourceforge.jexcelapi:jxl:2.6.12")
+
+    // ---------- 眼镜麦克风离线 ASR（Vosk，需自备中文模型放 assets） ----------
+    implementation("com.alphacephei:vosk-android:0.3.47@aar")
+    implementation("net.java.dev.jna:jna:5.13.0@aar")
 }

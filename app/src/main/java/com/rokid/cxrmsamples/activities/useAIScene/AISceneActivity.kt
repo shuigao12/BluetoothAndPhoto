@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -57,26 +59,31 @@ fun AISceneScreen(viewModel: AISceneViewModel) {
             painter = painterResource(id = R.drawable.glasses_bg),
             modifier = Modifier.fillMaxSize(),
             contentDescription = null,
-            alpha = 0.3f
+            alpha = 0.08f
         )
         Text(
-            text = "欢迎使用AI场景",
+            text = "AI Scene",
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier
-                .padding(top = 32.dp)
+                .padding(top = 32.dp, start = 24.dp, end = 24.dp)
                 .align(Alignment.TopCenter)
         )
         Column(
             modifier = Modifier
-                .padding(top = 64.dp)
+                .padding(top = 72.dp, start = 24.dp, end = 24.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             if (!aiStatus) {
-                Text(text = "请长按TouchPad或使用语音 \"乐奇\" 唤醒AI场景")
+                Text(
+                    text = "Waiting for the glasses AI scene",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             } else {
-                Button(onClick = { viewModel.whenASREnd() }) {
-                    Text(text = "模拟ASR 结束")
+                Button(onClick = { viewModel.whenASREnd() }, modifier = Modifier.fillMaxWidth()) {
+                    Text(text = "Simulate ASR Completion")
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // 意图指向设备控制 CheckBox
@@ -86,7 +93,7 @@ fun AISceneScreen(viewModel: AISceneViewModel) {
                             viewModel.setDeviceControl(checked)
                         }
                     )
-                    Text(text = "意图指向设备控制")
+                    Text(text = "Device control intent")
                     // 只有当"意图指向设备控制"未被选中时，才显示"是否需要图片" CheckBox
                     if (!isDeviceControl) {
                         Checkbox(
@@ -95,7 +102,7 @@ fun AISceneScreen(viewModel: AISceneViewModel) {
                                 viewModel.setHasPhotoRequest(checked)
                             }
                         )
-                        Text(text = "是否识别照片")
+                        Text(text = "Analyze a photo")
                     }
                 }
                 if (photoGet != null && hasPhoto) {

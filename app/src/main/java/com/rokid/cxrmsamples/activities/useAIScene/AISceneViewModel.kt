@@ -128,11 +128,11 @@ class AISceneViewModel : ViewModel() {
         // ...
         // 模拟从ASR 返回
 
-        var result = "模拟ASR返回结果"
+        var result = "Simulated ASR result"
         count++
         byteSize += size
         if (count >= 100) {
-            result = "模拟ASR返回结果 $byteSize"
+            result = "Simulated ASR result $byteSize"
             CxrApi.getInstance().sendAsrContent(result)
         }
     }
@@ -163,7 +163,7 @@ class AISceneViewModel : ViewModel() {
         // 发送文本或图片给 AI
         // ...
         // 模拟AI 响应
-        val text = "模拟AI返回结果"
+        val text = "Simulated AI result"
         // 循环发送10次，启动携程
         viewModelScope.launch {
             for (i in 1..10) {
@@ -181,7 +181,7 @@ class AISceneViewModel : ViewModel() {
     }
 
     private fun takeAIPic(){
-        CxrApi.getInstance().takeGlassPhoto(640, 480, 100, PhotoResultCallback { status, pictureData -> 
+        CxrApi.getInstance().takeGlassPhoto(640, 480, 100, PhotoResultCallback { status, pictureData ->
             //--见图片传递给画面
             if (status == ValueUtil.CxrStatus.RESPONSE_SUCCEED){
                 pictureData?.let {

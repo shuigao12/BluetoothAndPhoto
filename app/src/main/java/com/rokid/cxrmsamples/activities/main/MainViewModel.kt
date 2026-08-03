@@ -85,6 +85,7 @@ class MainViewModel : ViewModel() {
      * @param context Context
      */
     fun toInit(context: Context) {
+        Log.i("MainViewModel", "toInit called, starting BluetoothInitActivity")
         context.startActivity(Intent(context, BluetoothInitActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })

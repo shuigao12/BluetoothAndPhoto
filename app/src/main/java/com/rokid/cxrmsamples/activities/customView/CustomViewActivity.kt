@@ -8,9 +8,14 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -60,24 +65,35 @@ fun CustomViewScreen(viewModel: CustomViewViewModel, uploadIcons: () -> Unit) {
         Image(
             painter = painterResource(id = R.drawable.glasses_bg),
             contentDescription = null,
-            alpha = 0.3f,
+            alpha = 0.08f,
             modifier = Modifier.fillMaxSize()
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "自定义页面", modifier = Modifier.padding(top = 32.dp, bottom = 8.dp))
+            Text(
+                text = "Custom Glasses View",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)
+            )
+            Text(
+                text = if (iconSent) "Assets ready" else "Assets not uploaded",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (iconSent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+            )
 
             if(!iconSent) {
                 Button(
                     onClick = { uploadIcons() },
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) {
-                    Text("上传图像")
+                    Text("Upload View Assets")
                 }
             }else {
 
@@ -85,16 +101,16 @@ fun CustomViewScreen(viewModel: CustomViewViewModel, uploadIcons: () -> Unit) {
                     onClick = {
                         viewModel.toggleCustomView()
                     },
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) {
-                    Text(if (isCustomViewOpen) "关闭自定义页面" else "打开自定义页面")
+                    Text(if (isCustomViewOpen) "Close Glasses View" else "Open Glasses View")
                 }
                 if (isCustomViewOpen) {
-                    Button(
+                    OutlinedButton(
                         onClick = { viewModel.updateCustomView() },
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        modifier = Modifier.fillMaxWidth().height(52.dp).padding(top = 8.dp)
                     ) {
-                        Text("更新自定义界面")
+                        Text("Update View Content")
                     }
                 }
             }

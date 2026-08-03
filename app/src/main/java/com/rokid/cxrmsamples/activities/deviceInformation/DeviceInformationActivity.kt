@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -103,36 +105,36 @@ fun DeviceInformationScreen(
         Image(
             painter = painterResource(id = R.drawable.glasses_bg),
             contentDescription = null,
-            alpha = 0.3f,
+            alpha = 0.08f,
             modifier = Modifier.fillMaxSize()
         )
         Column(
             modifier = Modifier
-                .fillMaxWidth(0.85f)
+                .fillMaxWidth(0.9f)
                 .align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "", modifier = Modifier.height(32.dp))
+            Text(text = "Device Information", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 32.dp, bottom = 16.dp).fillMaxWidth())
             if (!deviceName.value.isNullOrEmpty()) {
-                Text(text = "Device Name: ${deviceName.value ?: ""}", fontSize = 18.sp)
+                Text(text = "Device: ${deviceName.value ?: ""}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth())
             }
             if (!deviceId.value.isNullOrEmpty()) {
-                Text(text = "SN: ${deviceId.value ?: ""}", fontSize = 14.sp)
+                Text(text = "SN: ${deviceId.value ?: ""}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth())
             }
             if (!systemVersion.value.isNullOrEmpty()) {
-                Text(text = "System Version: ${systemVersion.value ?: ""}", fontSize = 12.sp)
+                Text(text = "System version: ${systemVersion.value ?: ""}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth())
             }
             Row(modifier = Modifier.fillMaxWidth()) {
                 if (!wearingState.value.isNullOrEmpty()) {
                     Text(
-                        text = "Wearing State: ${if (wearingState.value == "1") "Wearing" else "Not Wearing"}",
+                        text = "Wear state: ${if (wearingState.value == "1") "Worn" else "Not worn"}",
                         fontSize = 12.sp,
                         modifier = Modifier.weight(1f)
                     )
                 }
                 if (isSetScreenOn.value && isScreenOn.value != null) {
                     Text(
-                        text = "Glasses Screen State: ${if (isScreenOn.value == true) "On" else "Off"}",
+                        text = "Screen: ${if (isScreenOn.value == true) "On" else "Off"}",
                         fontSize = 12.sp,
                         modifier = Modifier.weight(1f)
                     )
@@ -141,14 +143,14 @@ fun DeviceInformationScreen(
             Row(modifier = Modifier.fillMaxWidth()) {
                 if (batteryLevel.value != -1) {
                     Text(
-                        text = "Battery Level: ${batteryLevel.value}%",
+                        text = "Battery: ${batteryLevel.value}%",
                         fontSize = 12.sp,
                         modifier = Modifier.weight(1f)
                     )
                 }
                 if (isCharging.value != null) {
                     Text(
-                        text = "Is Charging: ${if (isCharging.value == true) "Yes" else "No"}",
+                        text = "Charging: ${if (isCharging.value == true) "Yes" else "No"}",
                         fontSize = 12.sp,
                         modifier = Modifier.weight(1f)
                     )
@@ -157,7 +159,7 @@ fun DeviceInformationScreen(
             Row(modifier = Modifier.fillMaxWidth()) {
                 if (soundVolume.value != -1) {
                     Text(
-                        text = "Volume Level: ${soundVolume.value}%",
+                        text = "Volume: ${soundVolume.value}%",
                         fontSize = 12.sp,
                         modifier = Modifier.weight(1f)
                     )
@@ -179,7 +181,7 @@ fun DeviceInformationScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Button(onClick = getAllInformation) {
-                Text(text = "Get Device All Information")
+                Text(text = "Refresh Device Information")
             }
 
             Row(
@@ -187,15 +189,15 @@ fun DeviceInformationScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(onClick = listenVolume, modifier = Modifier.weight(1f)) {
-                    Text(text = if (isSetVolume.value) "Remove V Listener" else "Listen Volume")
+                    Text(text = if (isSetVolume.value) "Stop Volume Updates" else "Track Volume")
                 }
                 Button(onClick = listenBrightness, modifier = Modifier.weight(1f)) {
-                    Text(text = if (isSetBrightness.value) "Remove B Listener" else "Listen Brightness")
+                    Text(text = if (isSetBrightness.value) "Stop Brightness Updates" else "Track Brightness")
                 }
             }
 
             Button(onClick = listenBattery, modifier = Modifier.fillMaxWidth(0.85f)) {
-                Text(text = if (isSetBattery.value) "Remove Battery Listener" else "Listen Battery")
+                Text(text = if (isSetBattery.value) "Stop Battery Updates" else "Track Battery")
             }
 
             Row(
@@ -203,10 +205,10 @@ fun DeviceInformationScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(onClick = listenScreen, modifier = Modifier.weight(1f)) {
-                    Text(text = if (isSetScreenOn.value) "Remove S Listener" else "Listen Screen")
+                    Text(text = if (isSetScreenOn.value) "Stop Screen Updates" else "Track Screen")
                 }
                 Button(onClick = screenOff, modifier = Modifier.weight(1f)) {
-                    Text(text = "Screen Off")
+                    Text(text = "Turn Screen Off")
                 }
             }
 

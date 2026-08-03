@@ -29,7 +29,7 @@ class ExampleInstrumentedTest {
     @Test
     fun testLoadPyTorchModel() {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        val modelPath = assetFilePath(appContext, "1stage_optimized.ptl")
+        val modelPath = assetFilePath(appContext, "model/coarse_seg2class.ptl")
         assertNotNull(modelPath)
         val module = LiteModuleLoader.load(modelPath)
         assertNotNull(module)

@@ -27,6 +27,7 @@ object CONSTANT {
     const val CLIENT_SECRET = "ac4b4555-d295-11f0-961e-043f72fdb9c8"
     fun getSNResource() = R.raw.sn_60b522288d8449b1a33ad989318c22ce
 
-    const val CUSTOM_CMD = "rk_custom_key"
+    // Align with glasses acceptedNames: {"rk_custom_client", "CUSTOM_CMD", "custom_cmd", "rk_custom_cmd"}
+    const val CUSTOM_CMD = "CUSTOM_CMD"
 
 }
