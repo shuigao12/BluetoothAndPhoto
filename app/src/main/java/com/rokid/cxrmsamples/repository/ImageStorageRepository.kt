@@ -26,8 +26,7 @@ class ImageStorageRepository(private val context: Context) {
         name: String,
         date: String,
         timingInfo: String? = null,
-        modelName: String? = null,
-        diseaseLevel: String? = null
+        modelName: String? = null
     ): Boolean = withContext(Dispatchers.IO) {
         val existingPic = PicDBHelper.getInstance(context).queryByName(name)
         if (existingPic != null) {
@@ -62,8 +61,7 @@ class ImageStorageRepository(private val context: Context) {
                 name = name,
                 date = date,
                 timingInfo = timingInfo,
-                modelName = modelName,
-                diseaseLevel = diseaseLevel
+                modelName = modelName
             )
             val db = PicDBHelper.getInstance(context)
             try {

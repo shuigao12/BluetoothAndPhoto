@@ -3,15 +3,12 @@ package com.rokid.cxrmsamples.repository
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
-import com.rokid.cxrmsamples.activities.model.ClassificationBackend
-import com.rokid.cxrmsamples.activities.model.OnnxClassificationBackend
 import com.rokid.cxrmsamples.activities.model.OnnxStageBackend
-import com.rokid.cxrmsamples.activities.model.PtlClassificationBackend
 import com.rokid.cxrmsamples.activities.model.PtlStageBackend
 import com.rokid.cxrmsamples.activities.model.SegmentationEngine
 import com.rokid.cxrmsamples.activities.model.StageBackend
 import com.rokid.cxrmsamples.activities.model.StageLayout
-import com.rokid.cxrmsamples.activities.model.ThreeStageSegmentationEngine
+import com.rokid.cxrmsamples.activities.model.TwoStageSegmentationEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -29,7 +26,6 @@ class SegmentationRepository(private val context: Context) {
     private var segmentationEngine: SegmentationEngine? = null
     private var selectedStage1Id: String = Stage1ModelCatalog.defaultId
     private var selectedStage2Id: String = Stage2SegModelCatalog.defaultId
-    private var selectedStage3Id: String = Stage3ClsModelCatalog.defaultId
 
     var lastLoadError: String? = null
         private set
@@ -68,23 +64,6 @@ class SegmentationRepository(private val context: Context) {
         }
     }
 
-    fun getAvailableStage3Options(): List<Stage3ClsModelOption> {
-        return Stage3ClsModelCatalog.allOptions.filter { isAssetAvailable(it.assetFileName) }
-    }
-
-    fun getSelectedStage3Option(): Stage3ClsModelOption? {
-        return Stage3ClsModelCatalog.findById(selectedStage3Id)
-            ?: Stage3ClsModelCatalog.allOptions.firstOrNull { isAssetAvailable(it.assetFileName) }
-    }
-
-    fun setSelectedStage3(optionId: String) {
-        if (selectedStage3Id != optionId) {
-            selectedStage3Id = optionId
-            invalidateEngine()
-            Log.i(TAG, "Stage3 selection changed to: $optionId")
-        }
-    }
-
     fun invalidateEngine() {
         segmentationEngine = null
     }
@@ -109,16 +88,14 @@ class SegmentationRepository(private val context: Context) {
                     ?: throw IOException("Stage 1 XNNPACK INT8 model is missing from assets/model")
                 val stage2Option = getSelectedStage2Option()
                     ?: throw IOException("Stage 2 XNNPACK INT8 model is missing from assets/model")
-                val stage3Option = getSelectedStage3Option()
-                    ?: throw IOException("Stage 3 XNNPACK INT8 model is missing from assets/model")
 
                 onProgress?.invoke("Loading ${stage1Option.displayName}...")
                 Log.i(
                     TAG,
-                    "Loading three-stage engine stage1=${stage1Option.assetFileName}, stage2=${stage2Option.assetFileName}, stage3=${stage3Option.assetFileName}"
+                    "Loading two-stage engine stage1=${stage1Option.assetFileName}, stage2=${stage2Option.assetFileName}"
                 )
 
-                segmentationEngine = createThreeStageEngine(stage1Option, stage2Option, stage3Option, onProgress)
+                segmentationEngine = createTwoStageEngine(stage1Option, stage2Option, onProgress)
 
                 Log.i(TAG, "Segmentation engine created: ${segmentationEngine?.javaClass?.simpleName}")
 
@@ -142,19 +119,16 @@ class SegmentationRepository(private val context: Context) {
         }
     }
 
-    private fun createThreeStageEngine(
+    private fun createTwoStageEngine(
         stage1Option: Stage1ModelOption,
         stage2Option: Stage2SegModelOption,
-        stage3Option: Stage3ClsModelOption,
         onProgress: ((String) -> Unit)?
     ): SegmentationEngine {
         onProgress?.invoke("Loading Stage 1: ${stage1Option.assetFileName}...")
         onProgress?.invoke("Loading Stage 2: ${stage2Option.assetFileName}...")
-        onProgress?.invoke("Loading Stage 3: ${stage3Option.assetFileName}...")
 
         val stage1File = copyAssetToFile("$MODEL_ASSET_DIR/${stage1Option.assetFileName}", stage1Option.assetFileName)
         val stage2File = copyAssetToFile("$MODEL_ASSET_DIR/${stage2Option.assetFileName}", stage2Option.assetFileName)
-        val stage3File = copyAssetToFile("$MODEL_ASSET_DIR/${stage3Option.assetFileName}", stage3Option.assetFileName)
 
         val stage1Backend = openStageBackend(
             stage1File,
@@ -175,26 +149,12 @@ class SegmentationRepository(private val context: Context) {
             stage1Backend.close()
             throw IOException("Stage 2 failed to load: ${e.message}", e)
         }
-        val classificationBackend = try {
-            openClsBackend(
-                stage3File,
-                stage3Option.runtime,
-                stage3Option.useXnnpack,
-                stage3Option.useBasicGraphOpt
-            )
-        } catch (e: Exception) {
-            stage1Backend.close()
-            stage2Backend.close()
-            throw IOException("Stage 3 failed to load: ${e.message}", e)
-        }
-
-        return ThreeStageSegmentationEngine(
+        return TwoStageSegmentationEngine(
             stage1Backend = stage1Backend,
             stage2Backend = stage2Backend,
-            classificationBackend = classificationBackend,
             stage1Layout = StageLayout(classCount = 2, healthyIdx = 1, bgIdx = 0),
             stage2Layout = StageLayout(classCount = 3, healthyIdx = 1, bgIdx = 0, redIdx = 2),
-            engineName = "three-stage-${stage1Option.id}-${stage2Option.id}-${stage3Option.id}"
+            engineName = "two-stage-${stage1Option.id}-${stage2Option.id}"
         )
     }
 
@@ -211,23 +171,6 @@ class SegmentationRepository(private val context: Context) {
                 modelFile = modelFile,
                 useXnnpack = useXnnpack,
                 fixedInputSize = inputSize,
-                useBasicGraphOpt = useBasicGraphOpt
-            )
-        }
-    }
-
-    private fun openClsBackend(
-        modelFile: File,
-        runtime: ModelRuntime,
-        useXnnpack: Boolean,
-        useBasicGraphOpt: Boolean
-    ): ClassificationBackend {
-        return when (runtime) {
-            ModelRuntime.PTL -> PtlClassificationBackend(modelFile, STAGE3_INPUT_SIZE)
-            ModelRuntime.ONNX -> OnnxClassificationBackend(
-                modelFile = modelFile,
-                useXnnpack = useXnnpack,
-                fixedInputSize = STAGE3_INPUT_SIZE,
                 useBasicGraphOpt = useBasicGraphOpt
             )
         }
@@ -325,6 +268,5 @@ class SegmentationRepository(private val context: Context) {
     companion object {
         private const val STAGE1_INPUT_SIZE = 512
         private const val STAGE2_INPUT_SIZE = 512
-        private const val STAGE3_INPUT_SIZE = 224
     }
 }

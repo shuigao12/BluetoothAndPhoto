@@ -44,7 +44,6 @@ import com.rokid.cxrmsamples.repository.SegmentationRepository
 import com.rokid.cxrmsamples.repository.ImageStorageRepository
 import com.rokid.cxrmsamples.repository.Stage1ModelOption
 import com.rokid.cxrmsamples.repository.Stage2SegModelOption
-import com.rokid.cxrmsamples.repository.Stage3ClsModelOption
 import java.util.Collections
 import java.io.FileOutputStream
 
@@ -124,12 +123,6 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
 
     private val _selectedStage2 = MutableStateFlow<Stage2SegModelOption?>(null)
     val selectedStage2 = _selectedStage2.asStateFlow()
-
-    private val _stage3Options = MutableStateFlow<List<Stage3ClsModelOption>>(emptyList())
-    val stage3Options = _stage3Options.asStateFlow()
-
-    private val _selectedStage3 = MutableStateFlow<Stage3ClsModelOption?>(null)
-    val selectedStage3 = _selectedStage3.asStateFlow()
 
     private val _isModelLoading = MutableStateFlow(false)
     val isModelLoading = _isModelLoading.asStateFlow()
@@ -331,12 +324,11 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
 
             recordStage("Stage 1 coarse segmentation", result.stage1RuntimeMs)
             recordStage("Stage 2 fine segmentation", result.stage2RuntimeMs)
-            recordStage("Stage 3 disease classification", result.stage3RuntimeMs)
 
             val nameStart = System.currentTimeMillis()
             reportProgress(
                 "3/6 Generate name",
-                "severity=${String.format(Locale.US, "%.2f%%", result.percent * 100f)}, ${result.diseaseLevel}"
+                "affected area=${String.format(Locale.US, "%.2f%%", result.percent * 100f)}"
             )
 
             val baseName = _defaultNameState.value.trim()
@@ -350,7 +342,7 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
             recordStageSince("Generate name", nameStart)
 
             val timingInfo = buildTimingInfo(result)
-            val modelName = currentStage1ModelName()
+            val modelName = currentModelName()
 
             var success = false
             if (_isAutoSave.value) {
@@ -358,7 +350,7 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
                 reportProgress("4/6 Auto-save", finalName)
                 Log.i(TAG, "Auto-saving: finalName=$finalName, date=$dateStr, model=$modelName, timing=$timingInfo")
                 success = imageStorageRepository.saveSegmentationResult(
-                    bitmap, result.percent, finalName, dateStr, timingInfo, modelName, result.diseaseLevel
+                    bitmap, result.percent, finalName, dateStr, timingInfo, modelName
                 )
                 recordStageSince("Auto-save", saveStart)
                 if (success) {
@@ -374,14 +366,14 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
             val drawStart = System.currentTimeMillis()
             reportProgress("5/6 Render result", timingSummary(result))
             val annotatedBitmap = try {
-                drawResultOnBitmap(bitmap, result.percent, result.diseaseLevel)
+                drawResultOnBitmap(bitmap, result.percent)
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to draw overlay", e)
                 bitmap
             }
             recordStageSince("Render overlay", drawStart)
 
-            sendSegmentationResultToGlass(result.percent, result.diseaseLevel)
+            sendSegmentationResultToGlass(result.percent)
 
             reportProgress("6/6 Complete", "Total ${System.currentTimeMillis() - progressStartMs}ms")
             updateSessionImage(task.timestamp, annotatedBitmap.asImageBitmap(), result, finalName, timingInfo, modelName)
@@ -402,11 +394,10 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
         Log.i(TAG, "[StageTiming] $stage = ${durationMs}ms")
     }
 
-    private fun currentStage1ModelName(): String {
+    private fun currentModelName(): String {
         val s1 = _selectedStage1.value?.displayName ?: "Unknown"
         val s2 = _selectedStage2.value?.displayName ?: "Unknown"
-        val s3 = _selectedStage3.value?.displayName ?: "Unknown"
-        return "$s1 / $s2 / $s3"
+        return "$s1 / $s2"
     }
 
     private fun buildTimingInfo(result: SegmentationResult): String {
@@ -415,7 +406,7 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun timingSummary(result: SegmentationResult): String {
-        return "Stage 1=${result.stage1RuntimeMs}ms, Stage 2=${result.stage2RuntimeMs}ms, Stage 3=${result.stage3RuntimeMs}ms, total=${result.runtimeMs}ms"
+        return "Stage 1=${result.stage1RuntimeMs}ms, Stage 2=${result.stage2RuntimeMs}ms, total=${result.runtimeMs}ms"
     }
 
     private fun reportProgress(step: String, detail: String = "") {
@@ -575,13 +566,10 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
     private suspend fun refreshModelOptions() {
         val stage1 = segmentationRepository.getSelectedStage1Option()
         val stage2 = segmentationRepository.getSelectedStage2Option()
-        val stage3 = segmentationRepository.getSelectedStage3Option()
         _selectedStage1.value = stage1
         _selectedStage2.value = stage2
-        _selectedStage3.value = stage3
         _stage1Options.value = listOfNotNull(stage1)
         _stage2Options.value = listOfNotNull(stage2)
-        _stage3Options.value = listOfNotNull(stage3)
     }
 
     private suspend fun reloadModelsInternal() {
@@ -621,10 +609,8 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
         return Bitmap.createScaledBitmap(bitmap, newW, newH, true)
     }
 
-    /**
-     * 在位图右上角绘制 level 与 percent。
-     */
-    private fun drawResultOnBitmap(src: Bitmap, percent: Float, diseaseLevel: String): Bitmap {
+    /** Draws the affected-area percentage in the top-right corner. */
+    private fun drawResultOnBitmap(src: Bitmap, percent: Float): Bitmap {
         val mutable = try {
             src.copy(Bitmap.Config.ARGB_8888, true)
         } catch (_: Throwable) {
@@ -637,7 +623,7 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
         val density = dm.density
 
         val percentText = String.format(Locale.US, "%.1f%%", percent * 100f)
-        val lines = listOf(diseaseLevel, percentText)
+        val lines = listOf(percentText)
 
         val minDim = min(mutable.width, mutable.height).toFloat()
         val textSizePx = max(minDim * 0.07f, 16f * density)
@@ -912,9 +898,9 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
                  return@launch
             }
             val timingInfo = _currentSessionImage.value?.timingInfo
-            val modelName = _currentSessionImage.value?.modelName ?: currentStage1ModelName()
+            val modelName = _currentSessionImage.value?.modelName ?: currentModelName()
             val success = imageStorageRepository.saveSegmentationResult(
-                bmp, result.percent, name, date, timingInfo, modelName, result.diseaseLevel
+                bmp, result.percent, name, date, timingInfo, modelName
             )
             if (success) {
                 _saveStatus.value = "Saved successfully"
@@ -981,9 +967,9 @@ class PictureViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun sendSegmentationResultToGlass(percent: Float, level: String) {
+    private fun sendSegmentationResultToGlass(percent: Float) {
         viewModelScope.launch(Dispatchers.IO) {
-            GlassesNotify.segmentationResult(percent, level)
+            GlassesNotify.segmentationResult(percent)
         }
     }
 

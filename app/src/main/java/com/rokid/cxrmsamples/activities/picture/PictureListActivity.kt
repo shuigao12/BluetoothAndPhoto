@@ -44,7 +44,6 @@ class PictureListActivity : ComponentActivity() {
                                 putExtra(PictureDetailActivity.EXTRA_CREATED_AT, pic.createdAt)
                                 putExtra(PictureDetailActivity.EXTRA_TIMING_INFO, pic.timingInfo)
                                 putExtra(PictureDetailActivity.EXTRA_MODEL_NAME, pic.modelName)
-                                putExtra(PictureDetailActivity.EXTRA_DISEASE_LEVEL, pic.diseaseLevel)
                             }
                         )
                     }

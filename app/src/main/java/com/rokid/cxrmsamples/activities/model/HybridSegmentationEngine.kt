@@ -28,10 +28,6 @@ interface StageBackend : Closeable {
     fun run(inputBitmap: Bitmap): FloatArray
 }
 
-interface ClassificationBackend : Closeable {
-    fun run(inputBitmap: Bitmap): FloatArray
-}
-
 data class StageLayout(
     val classCount: Int,
     val healthyIdx: Int,
@@ -131,8 +127,7 @@ class GenericTwoStageSegmentationEngine(
                 stage1RuntimeMs = stage1Mask.runtimeMs,
                 stage2RuntimeMs = stage2Runtime,
                 redCount = stage2Mask.redCount,
-                greenCount = stage2Mask.greenCount,
-                diseaseLevel = "level1"
+                greenCount = stage2Mask.greenCount
             )
         } catch (e: Throwable) {
             Log.e(TAG, "$engineName segmentation failed: ${e.message}", e)
@@ -221,10 +216,9 @@ class GenericTwoStageSegmentationEngine(
     }
 }
 
-class ThreeStageSegmentationEngine(
+class TwoStageSegmentationEngine(
     private val stage1Backend: StageBackend,
     private val stage2Backend: StageBackend,
-    private val classificationBackend: ClassificationBackend,
     private val stage1Layout: StageLayout,
     private val stage2Layout: StageLayout,
     private val engineName: String
@@ -238,7 +232,6 @@ class ThreeStageSegmentationEngine(
             bmp.setPixels(fill, 0, side, 0, 0, side, side)
             stage1Backend.run(bmp)
             stage2Backend.run(bmp)
-            classificationBackend.run(Bitmap.createScaledBitmap(bmp, STAGE3_INPUT_SIZE, STAGE3_INPUT_SIZE, true))
         } catch (e: Throwable) {
             Log.w(TAG, "$engineName warmup failed: ${e.message}", e)
         }
@@ -308,21 +301,10 @@ class ThreeStageSegmentationEngine(
             val totalForeground = stage2Mask.redCount + stage2Mask.greenCount
             val percent = if (totalForeground == 0f) 0f else stage2Mask.redCount / totalForeground
 
-            onProgress("Stage 3 disease classification (${STAGE3_INPUT_SIZE}x${STAGE3_INPUT_SIZE})...")
-            val stage3Start = System.currentTimeMillis()
-            val clsInput = Bitmap.createScaledBitmap(leafMasked, STAGE3_INPUT_SIZE, STAGE3_INPUT_SIZE, true)
-            val logits = try {
-                classificationBackend.run(clsInput)
-            } finally {
-                if (clsInput !== leafMasked) clsInput.recycle()
-            }
-            val diseaseLevel = DiseaseLevel.argmax(logits)
-            val stage3Runtime = System.currentTimeMillis() - stage3Start
-
             val totalRuntime = System.currentTimeMillis() - pipelineStart
             Log.i(
                 TAG,
-                "$engineName finished total=${totalRuntime}ms, stage1=${stage1Runtime}ms, stage2=${stage2Runtime}ms, stage3=${stage3Runtime}ms, level=$diseaseLevel"
+                "$engineName finished total=${totalRuntime}ms, stage1=${stage1Runtime}ms, stage2=${stage2Runtime}ms"
             )
 
             ImageSegmentationEngine.SegmentationResult(
@@ -332,9 +314,7 @@ class ThreeStageSegmentationEngine(
                 stage1RuntimeMs = stage1Runtime,
                 stage2RuntimeMs = stage2Runtime,
                 redCount = stage2Mask.redCount,
-                greenCount = stage2Mask.greenCount,
-                diseaseLevel = diseaseLevel,
-                stage3RuntimeMs = stage3Runtime
+                greenCount = stage2Mask.greenCount
             )
         } catch (e: Throwable) {
             Log.e(TAG, "$engineName segmentation failed: ${e.message}", e)
@@ -433,9 +413,8 @@ class ThreeStageSegmentationEngine(
     }
 
     companion object {
-        private const val TAG = "ThreeStageEngine"
+        private const val TAG = "TwoStageEngine"
         private const val STAGE2_INPUT_SIZE = 512
-        private const val STAGE3_INPUT_SIZE = 224
     }
 }
 
@@ -443,37 +422,6 @@ class PtlStageBackend(
     modelFile: File,
     private val inputSize: Int = 512
 ) : StageBackend {
-    private val module = LiteModuleLoader.load(modelFile.absolutePath)
-
-    override fun run(inputBitmap: Bitmap): FloatArray {
-        val working = if (inputBitmap.width == inputSize && inputBitmap.height == inputSize) {
-            inputBitmap
-        } else {
-            Bitmap.createScaledBitmap(inputBitmap, inputSize, inputSize, true)
-        }
-        return try {
-            val inputTensor = TensorImageUtils.bitmapToFloat32Tensor(
-                working,
-                TensorImageUtils.TORCHVISION_NORM_MEAN_RGB,
-                TensorImageUtils.TORCHVISION_NORM_STD_RGB
-            )
-            module.forward(IValue.from(inputTensor)).toTensor().dataAsFloatArray
-        } finally {
-            if (working !== inputBitmap) {
-                working.recycle()
-            }
-        }
-    }
-
-    override fun close() {
-        // LiteModuleLoader doesn't expose an explicit close.
-    }
-}
-
-class PtlClassificationBackend(
-    modelFile: File,
-    private val inputSize: Int = 224
-) : ClassificationBackend {
     private val module = LiteModuleLoader.load(modelFile.absolutePath)
 
     override fun run(inputBitmap: Bitmap): FloatArray {
@@ -652,33 +600,6 @@ class OnnxStageBackend(
         } else {
             inputBitmap
         }
-        return try {
-            val tensorBuffer = bitmapToNormalizedFloatBuffer(working)
-            val shape = longArrayOf(1, 3, working.height.toLong(), working.width.toLong())
-            runner.run(tensorBuffer, shape)
-        } finally {
-            if (working !== inputBitmap) {
-                working.recycle()
-            }
-        }
-    }
-
-    override fun close() {
-        runner.close()
-    }
-}
-
-class OnnxClassificationBackend(
-    modelFile: File,
-    useXnnpack: Boolean = false,
-    private val fixedInputSize: Int = 224,
-    useBasicGraphOpt: Boolean = false
-) : ClassificationBackend {
-    private val environment: OrtEnvironment = OrtEnvironment.getEnvironment()
-    private val runner = OrtRunner(environment, modelFile, useXnnpack, useBasicGraphOpt)
-
-    override fun run(inputBitmap: Bitmap): FloatArray {
-        val working = Bitmap.createScaledBitmap(inputBitmap, fixedInputSize, fixedInputSize, true)
         return try {
             val tensorBuffer = bitmapToNormalizedFloatBuffer(working)
             val shape = longArrayOf(1, 3, working.height.toLong(), working.width.toLong())

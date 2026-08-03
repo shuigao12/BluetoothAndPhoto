@@ -24,8 +24,7 @@ class PicDBHelper private constructor(context: Context) : SQLiteOpenHelper(
               $COL_DATE TEXT NOT NULL,
               $COL_CREATED_AT INTEGER,
               $COL_TIMING_INFO TEXT,
-              $COL_MODEL_NAME TEXT,
-              $COL_DISEASE_LEVEL TEXT
+              $COL_MODEL_NAME TEXT
             )
             """.trimIndent()
         )
@@ -38,9 +37,6 @@ class PicDBHelper private constructor(context: Context) : SQLiteOpenHelper(
         }
         if (oldVersion < 3) {
             db.execSQL("ALTER TABLE $TABLE ADD COLUMN $COL_MODEL_NAME TEXT")
-        }
-        if (oldVersion < 4) {
-            db.execSQL("ALTER TABLE $TABLE ADD COLUMN $COL_DISEASE_LEVEL TEXT")
         }
     }
 
@@ -58,7 +54,6 @@ class PicDBHelper private constructor(context: Context) : SQLiteOpenHelper(
             put(COL_CREATED_AT, pic.createdAt)
             put(COL_TIMING_INFO, pic.timingInfo)
             put(COL_MODEL_NAME, pic.modelName)
-            put(COL_DISEASE_LEVEL, pic.diseaseLevel)
         }
         return writableDatabase.insert(TABLE, null, cv)
     }
@@ -85,7 +80,7 @@ class PicDBHelper private constructor(context: Context) : SQLiteOpenHelper(
             TABLE,
             arrayOf(
                 COL_PATH_SEG, COL_PATH_FULL, COL_PERCENT, COL_NAME, COL_DATE,
-                COL_CREATED_AT, COL_TIMING_INFO, COL_MODEL_NAME, COL_DISEASE_LEVEL
+                COL_CREATED_AT, COL_TIMING_INFO, COL_MODEL_NAME
             ),
             null,
             null,
@@ -137,13 +132,7 @@ class PicDBHelper private constructor(context: Context) : SQLiteOpenHelper(
         } else {
             null
         }
-        val levelIdx = cursor.getColumnIndex(COL_DISEASE_LEVEL)
-        val diseaseLevel = if (levelIdx >= 0 && !cursor.isNull(levelIdx)) {
-            cursor.getString(levelIdx)
-        } else {
-            null
-        }
-        return Pic(pathSeg, pathFull, percent, name, date, createdAt, timingInfo, modelName, diseaseLevel)
+        return Pic(pathSeg, pathFull, percent, name, date, createdAt, timingInfo, modelName)
     }
 
     companion object {
@@ -159,7 +148,6 @@ class PicDBHelper private constructor(context: Context) : SQLiteOpenHelper(
         private const val COL_CREATED_AT = "created_at"
         private const val COL_TIMING_INFO = "timing_info"
         private const val COL_MODEL_NAME = "model_name"
-        private const val COL_DISEASE_LEVEL = "disease_level"
 
         @Volatile private var instance: PicDBHelper? = null
         fun getInstance(ctx: Context): PicDBHelper = instance ?: synchronized(this) {

@@ -47,10 +47,9 @@ class PictureDetailActivity : ComponentActivity() {
         val createdAt = intent.getLongExtra(EXTRA_CREATED_AT, 0L)
         val timingInfo = intent.getStringExtra(EXTRA_TIMING_INFO)
         val modelName = intent.getStringExtra(EXTRA_MODEL_NAME)
-        val diseaseLevel = intent.getStringExtra(EXTRA_DISEASE_LEVEL)
         setContent {
             CXRMSamplesTheme {
-                PictureDetailScreen(pathSeg, percent, name, date, createdAt, timingInfo, modelName, diseaseLevel) {
+                PictureDetailScreen(pathSeg, percent, name, date, createdAt, timingInfo, modelName) {
                     finish()
                 }
             }
@@ -65,7 +64,6 @@ class PictureDetailActivity : ComponentActivity() {
         const val EXTRA_CREATED_AT = "created_at"
         const val EXTRA_TIMING_INFO = "timing_info"
         const val EXTRA_MODEL_NAME = "model_name"
-        const val EXTRA_DISEASE_LEVEL = "disease_level"
     }
 }
 
@@ -78,7 +76,6 @@ fun PictureDetailScreen(
     createdAt: Long,
     timingInfo: String?,
     modelName: String?,
-    diseaseLevel: String?,
     onBack: () -> Unit
 ) {
     Column(
@@ -110,7 +107,6 @@ fun PictureDetailScreen(
                 DetailLine("Name", name)
                 DetailLine("Date", date)
                 DetailLine("Affected area", String.format(Locale.US, "%.2f%%", percent * 100f))
-                if (!diseaseLevel.isNullOrBlank()) DetailLine("Disease level", diseaseLevel)
                 if (!modelName.isNullOrBlank()) DetailLine("Model", modelName)
                 if (createdAt > 0) DetailLine("Saved timestamp", createdAt.toString())
                 if (!timingInfo.isNullOrBlank()) DetailLine("Stage timing", timingInfo.toEnglishTimingInfo())
@@ -150,7 +146,6 @@ fun PreviewPictureDetailScreen() {
         createdAt = System.currentTimeMillis(),
         timingInfo = "Decode=50ms; Stage 1=1200ms; Stage 2=28000ms",
         modelName = "MedViT INT8",
-        diseaseLevel = "level3",
         onBack = {}
     )
 }

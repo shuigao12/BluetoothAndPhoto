@@ -46,10 +46,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-// 病害分级阈值（百分比制）：按需要直接修改
-private const val SEVERITY_MILD_UPPER_BOUND = 20f
-private const val SEVERITY_MEDIUM_UPPER_BOUND = 50f
-
 class ExportActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -198,7 +194,7 @@ private fun ExportScreen() {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text("Total records: ${dataList.value.size}")
                 Text("Selected: ${selectedItems.size}")
-                Text("CSV includes probability, disease level, timing, model, and image fields")
+                Text("CSV includes affected area, timing, model, and image fields")
                 exportStatus.value?.let { status ->
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
@@ -515,17 +511,15 @@ private fun writeCsv(file: File, list: List<Pic>) {
         // UTF-8 BOM，避免 Windows Excel 打开中文乱码
         fos.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
         fos.write(
-            "Sample Name,Affected Area (%),Raw Probability (0-1),Raw Disease Level,Severity Band,Captured At,Created Timestamp,Inference Timing,Model,Image File Name,Analyzed Image Path,Original Image Path\n"
+            "Sample Name,Affected Area (%),Raw Probability (0-1),Captured At,Created Timestamp,Inference Timing,Model,Image File Name,Analyzed Image Path,Original Image Path\n"
                 .toByteArray()
         )
         list.forEach {
             val imageName = buildImageEntryName(it)
             val line =
-                "${csvEscape(it.name)}," +
+                    "${csvEscape(it.name)}," +
                     "${String.format(Locale.US, "%.2f", it.percent * 100)}," +
                     "${String.format(Locale.US, "%.4f", it.percent)}," +
-                    "${csvEscape(it.diseaseLevel.orEmpty())}," +
-                    "${csvEscape(computeSeverityBucket(it.percent))}," +
                     "${csvEscape(it.date)}," +
                     "${it.createdAt}," +
                     "${csvEscape(it.timingInfo.orEmpty().toEnglishTimingInfo())}," +
@@ -535,15 +529,6 @@ private fun writeCsv(file: File, list: List<Pic>) {
                     "${csvEscape(it.pathFull.orEmpty())}\n"
             fos.write(line.toByteArray())
         }
-    }
-}
-
-private fun computeSeverityBucket(percent: Float): String {
-    val p = percent * 100f
-    return when {
-        p < SEVERITY_MILD_UPPER_BOUND -> "Mild"
-        p < SEVERITY_MEDIUM_UPPER_BOUND -> "Moderate"
-        else -> "Severe"
     }
 }
 

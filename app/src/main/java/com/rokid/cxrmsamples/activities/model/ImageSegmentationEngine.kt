@@ -28,9 +28,7 @@ class ImageSegmentationEngine(
         val stage1RuntimeMs: Long,
         val stage2RuntimeMs: Long,
         val redCount: Float,
-        val greenCount: Float,
-        val diseaseLevel: String = "level1",
-        val stage3RuntimeMs: Long = 0L
+        val greenCount: Float
     )
 
     private fun bitmapToTensor(bmp: Bitmap): Tensor {

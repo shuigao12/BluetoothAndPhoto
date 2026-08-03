@@ -8,15 +8,19 @@ data class Pic(
     var date: String,
     val createdAt: Long = System.currentTimeMillis(),
     val timingInfo: String? = null,
-    val modelName: String? = null,
-    val diseaseLevel: String? = null
+    val modelName: String? = null
 )
 
-fun String.toEnglishTimingInfo(): String = this
+fun String.toEnglishTimingInfo(): String = split(';')
+    .map { it.trim() }
+    .filter { it.isNotEmpty() }
+    .filterNot {
+        it.startsWith("Stage3") || it.startsWith("Stage 3", ignoreCase = true)
+    }
+    .joinToString("; ")
     .replace("模型推理(总)", "Inference total")
     .replace("Stage1粗分割", "Stage 1 coarse segmentation")
     .replace("Stage2精细分割", "Stage 2 fine segmentation")
-    .replace("Stage3病害分级", "Stage 3 disease classification")
     .replace("解码图片", "Decode image")
     .replace("缩放图片", "Resize image")
     .replace("生成名称", "Generate name")

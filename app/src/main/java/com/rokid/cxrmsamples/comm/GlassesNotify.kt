@@ -16,13 +16,11 @@ object GlassesNotify {
         send(VoiceCmdProtocol.PHOTO_CAPTURE_END)
     }
 
-    fun segmentationResult(percent: Float, level: String) {
+    fun segmentationResult(percent: Float) {
         val percentText = String.format(Locale.US, "%.6f", percent)
         val payload = Caps().apply {
             write("percent")
             write(percentText)
-            write("level")
-            write(level)
         }
         val envelope = Caps().apply {
             write(VoiceCmdProtocol.SEGMENTATION_RESULT)
@@ -31,17 +29,17 @@ object GlassesNotify {
 
         // 主路径：cmd=segmentation_result，与历史可用日志一致
         if (CxrCustomCmdSender.sendCaps(VoiceCmdProtocol.SEGMENTATION_RESULT, envelope)) {
-            Log.i(TAG, "segmentation_result sent: percent=$percent level=$level")
+            Log.i(TAG, "segmentation_result sent: percent=$percent")
             return
         }
 
         // 备用：仅发送 percent 载荷
         if (CxrCustomCmdSender.sendCaps(VoiceCmdProtocol.SEGMENTATION_RESULT, payload)) {
-            Log.i(TAG, "segmentation_result sent (flat payload): percent=$percent level=$level")
+            Log.i(TAG, "segmentation_result sent (flat payload): percent=$percent")
             return
         }
 
-        Log.w(TAG, "segmentation_result send failed: percent=$percent level=$level")
+        Log.w(TAG, "segmentation_result send failed: percent=$percent")
     }
 
     private fun send(payload: String) {

@@ -538,13 +538,8 @@ fun PictureScreen(
                             )
                         }
                         segResult != null -> {
-                            Text(
-                                text = segResult!!.diseaseLevel,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
                             val percentText = String.format(Locale.US, "Affected area: %.2f%%", (segResult!!.percent * 100f))
-                            Text(percentText, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 2.dp))
+                            Text(percentText, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp))
                             val modelLabel = currentImage?.modelName ?: "XNNPACK INT8"
                             if (!modelLabel.isNullOrBlank()) {
                                 Text(
@@ -678,7 +673,7 @@ fun PictureScreen(
                                 singleLine = true
                             )
                             val percentText = if (segResult != null) {
-                                String.format(Locale.US, "%s · affected area: %.2f%%", segResult!!.diseaseLevel, segResult!!.percent * 100f)
+                                String.format(Locale.US, "Affected area: %.2f%%", segResult!!.percent * 100f)
                             } else {
                                 ""
                             }
@@ -773,8 +768,6 @@ private fun CaptureSettingsCard(
 //            )
 //            FixedModelRow("Stage 1 · Coarse segmentation", "coarse_seg2class_xnnpack_int8")
 //            FixedModelRow("Stage 2 · Fine segmentation", "fine_seg3class_xnnpack_int8")
-//            FixedModelRow("Stage 3 · Disease classification", "cls4class_xnnpack_int8")
-
             Text(
                 text = "Capture resolution",
                 style = MaterialTheme.typography.labelLarge,
