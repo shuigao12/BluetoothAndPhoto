@@ -30,7 +30,7 @@ class PictureVoiceController(
         private const val RESTART_LISTEN_DELAY_MS = 500L
         private const val AFTER_COMMAND_COOLDOWN_MS = 2000L
 
-        const val VOICE_HINT = "analyze image"
+        const val VOICE_HINT = "analyze image / 拍照"
 
         private val COMMAND_ALIASES = listOf(
             "analyze image",
@@ -40,6 +40,7 @@ class PictureVoiceController(
             "识别图片",
             "开始识别",
             "分析图片",
+            "拍照",
         )
     }
 

@@ -226,7 +226,7 @@ class TwoStageSegmentationEngine(
 
     override fun warmup() {
         try {
-            val side = STAGE2_INPUT_SIZE
+            val side = MODEL_INPUT_SIZE
             val bmp = Bitmap.createBitmap(side, side, Bitmap.Config.ARGB_8888)
             val fill = IntArray(side * side) { 0xFF404040.toInt() }
             bmp.setPixels(fill, 0, side, 0, 0, side, side)
@@ -244,6 +244,9 @@ class TwoStageSegmentationEngine(
         onProgress: (String) -> Unit
     ): ImageSegmentationEngine.SegmentationResult? {
         val pipelineStart = System.currentTimeMillis()
+        var modelInput: Bitmap? = null
+        var stage1MaskBitmap: Bitmap? = null
+        var stage2Input: Bitmap? = null
         return try {
             val width = inputBitmap.width
             val height = inputBitmap.height
@@ -252,59 +255,58 @@ class TwoStageSegmentationEngine(
                 return null
             }
 
-            onProgress("Stage 1 coarse segmentation (${width}x${height})...")
+            val workingInput = if (width == MODEL_INPUT_SIZE && height == MODEL_INPUT_SIZE) {
+                inputBitmap
+            } else {
+                Bitmap.createScaledBitmap(inputBitmap, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, true)
+            }
+            modelInput = workingInput
+
+            onProgress("Stage 1 coarse segmentation (${MODEL_INPUT_SIZE}x${MODEL_INPUT_SIZE})...")
             val stage1Start = System.currentTimeMillis()
-            val stage1Scores = stage1Backend.run(inputBitmap)
-            val stage1MaskSmall = buildMaskBitmap(
+            val stage1Scores = stage1Backend.run(workingInput)
+            val stage1Runtime = System.currentTimeMillis() - stage1Start
+            val stage1Mask = buildMaskBitmap(
                 scores = stage1Scores,
-                width = STAGE2_INPUT_SIZE,
-                height = STAGE2_INPUT_SIZE,
+                width = MODEL_INPUT_SIZE,
+                height = MODEL_INPUT_SIZE,
                 layout = stage1Layout
             )
-            val stage1MaskBitmap = Bitmap.createScaledBitmap(
-                stage1MaskSmall.bitmap,
-                width,
-                height,
-                false
-            )
-            val stage1Mask = recountMask(stage1MaskBitmap, stage1Layout)
-            val stage1Runtime = System.currentTimeMillis() - stage1Start
+            stage1MaskBitmap = stage1Mask.bitmap
             if (stage1Mask.greenCount <= 0f) {
                 Log.w(TAG, "$engineName no leaf detected in stage1")
-                stage1MaskBitmap.recycle()
                 return null
             }
 
             onProgress("Stage 1 complete (${stage1Runtime}ms). Preparing Stage 2...")
-            val leafMasked = applyMaskToBitmap(inputBitmap, stage1MaskBitmap)
-            stage1MaskSmall.bitmap.recycle()
-            stage1MaskBitmap.recycle()
+            val maskedInput = applyMaskToBitmap(workingInput, stage1Mask.bitmap)
+            stage2Input = maskedInput
+            stage1Mask.bitmap.recycle()
+            stage1MaskBitmap = null
 
-            onProgress("Stage 2 fine segmentation (${STAGE2_INPUT_SIZE}x${STAGE2_INPUT_SIZE})...")
+            onProgress("Stage 2 fine segmentation (${MODEL_INPUT_SIZE}x${MODEL_INPUT_SIZE})...")
             val stage2Start = System.currentTimeMillis()
-            val stage2Scores = stage2Backend.run(leafMasked)
+            val stage2Scores = stage2Backend.run(maskedInput)
             val stage2Runtime = System.currentTimeMillis() - stage2Start
-            val stage2MaskSmall = buildMaskBitmap(
+            maskedInput.recycle()
+            stage2Input = null
+
+            val stage2Mask = buildMaskBitmap(
                 scores = stage2Scores,
-                width = STAGE2_INPUT_SIZE,
-                height = STAGE2_INPUT_SIZE,
+                width = MODEL_INPUT_SIZE,
+                height = MODEL_INPUT_SIZE,
                 layout = stage2Layout
             )
-            val stage2MaskBitmap = Bitmap.createScaledBitmap(
-                stage2MaskSmall.bitmap,
-                width,
-                height,
-                true
-            )
-            val stage2Mask = recountMask(stage2MaskBitmap, stage2Layout)
 
             val totalForeground = stage2Mask.redCount + stage2Mask.greenCount
             val percent = if (totalForeground == 0f) 0f else stage2Mask.redCount / totalForeground
 
             val totalRuntime = System.currentTimeMillis() - pipelineStart
+            val pipelineOverhead = (totalRuntime - stage1Runtime - stage2Runtime).coerceAtLeast(0L)
             Log.i(
                 TAG,
-                "$engineName finished total=${totalRuntime}ms, stage1=${stage1Runtime}ms, stage2=${stage2Runtime}ms"
+                "$engineName finished total=${totalRuntime}ms, stage1Infer=${stage1Runtime}ms, " +
+                    "stage2Infer=${stage2Runtime}ms, pipelineOverhead=${pipelineOverhead}ms"
             )
 
             ImageSegmentationEngine.SegmentationResult(
@@ -319,6 +321,10 @@ class TwoStageSegmentationEngine(
         } catch (e: Throwable) {
             Log.e(TAG, "$engineName segmentation failed: ${e.message}", e)
             null
+        } finally {
+            if (modelInput !== inputBitmap) modelInput?.recycle()
+            stage1MaskBitmap?.recycle()
+            stage2Input?.recycle()
         }
     }
 
@@ -327,22 +333,6 @@ class TwoStageSegmentationEngine(
         val redCount: Float,
         val greenCount: Float
     )
-
-    private fun recountMask(bitmap: Bitmap, layout: StageLayout): MaskResult {
-        val width = bitmap.width
-        val height = bitmap.height
-        var redCount = 0f
-        var greenCount = 0f
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                when (bitmap.getPixel(x, y)) {
-                    0xFF008000.toInt() -> greenCount++
-                    0xFF800000.toInt() -> redCount++
-                }
-            }
-        }
-        return MaskResult(bitmap, redCount, greenCount)
-    }
 
     private fun buildMaskBitmap(
         scores: FloatArray,
@@ -401,20 +391,24 @@ class TwoStageSegmentationEngine(
     private fun applyMaskToBitmap(source: Bitmap, mask: Bitmap): Bitmap {
         val width = source.width
         val height = source.height
-        val result = source.copy(Bitmap.Config.ARGB_8888, true)
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                if (mask.getPixel(x, y) == Color.BLACK) {
-                    result.setPixel(x, y, Color.BLACK)
-                }
+        require(mask.width == width && mask.height == height) {
+            "Mask size ${mask.width}x${mask.height} does not match source ${width}x${height}"
+        }
+        val sourcePixels = IntArray(width * height)
+        val maskPixels = IntArray(width * height)
+        source.getPixels(sourcePixels, 0, width, 0, 0, width, height)
+        mask.getPixels(maskPixels, 0, width, 0, 0, width, height)
+        for (index in sourcePixels.indices) {
+            if (maskPixels[index] == Color.BLACK) {
+                sourcePixels[index] = Color.BLACK
             }
         }
-        return result
+        return Bitmap.createBitmap(sourcePixels, width, height, Bitmap.Config.ARGB_8888)
     }
 
     companion object {
         private const val TAG = "TwoStageEngine"
-        private const val STAGE2_INPUT_SIZE = 512
+        private const val MODEL_INPUT_SIZE = 512
     }
 }
 
@@ -471,6 +465,13 @@ private class OrtRunner(
     private var activeOptLevel: OrtSession.SessionOptions.OptLevel = preferredOptLevel
     private var inputName: String = ""
 
+    private val cpuFallbackOptLevel: OrtSession.SessionOptions.OptLevel
+        get() = if (preferXnnpack) {
+            OrtSession.SessionOptions.OptLevel.ALL_OPT
+        } else {
+            preferredOptLevel
+        }
+
     fun run(inputBuffer: FloatBuffer, shape: LongArray): FloatArray {
         ensureSession(preferXnnpack = preferXnnpack, optLevel = preferredOptLevel)
         return runWithFallback(inputBuffer, shape)
@@ -482,7 +483,7 @@ private class OrtRunner(
         } catch (e: OrtException) {
             if (activeXnnpack && shouldFallbackToCpu(e)) {
                 Log.w(ONNX_TAG, "XNNPACK infer failed (${e.message}), fallback CPU: $modelPath")
-                recreateSession(useXnnpack = false, optLevel = activeOptLevel)
+                recreateSession(useXnnpack = false, optLevel = cpuFallbackOptLevel)
                 inputBuffer.rewind()
                 runWithFallback(inputBuffer, shape)
             } else if (shouldFallbackGraphOpt(e)) {
@@ -514,7 +515,7 @@ private class OrtRunner(
                 }
             }
         }
-        openSession(useXnnpack = false, optLevel = optLevel)
+        openSession(useXnnpack = false, optLevel = cpuFallbackOptLevel)
     }
 
     private fun recreateSession(
@@ -595,7 +596,10 @@ class OnnxStageBackend(
     private val runner = OrtRunner(environment, modelFile, useXnnpack, useBasicGraphOpt)
 
     override fun run(inputBitmap: Bitmap): FloatArray {
-        val working = if (fixedInputSize != null) {
+        val working = if (
+            fixedInputSize != null &&
+            (inputBitmap.width != fixedInputSize || inputBitmap.height != fixedInputSize)
+        ) {
             Bitmap.createScaledBitmap(inputBitmap, fixedInputSize, fixedInputSize, true)
         } else {
             inputBitmap

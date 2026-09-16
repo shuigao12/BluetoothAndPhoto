@@ -476,92 +476,92 @@ fun PictureScreen(
             }
 
             // 分割结果显示：处理中时在这里提示，完成后显示百分比
-            OutlinedCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                colors = CardDefaults.outlinedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
-                )
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Model: $modelLoadState", color = MaterialTheme.colorScheme.onSurface)
-                    when {
-                        uiState is PictureViewModel.PictureUiState.ReadyToAnalyze -> {
-                            Text(
-                                text = "Image ready. Tap Analyze to continue.",
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                            if (!isModelReady) {
-                                Text(
-                                    text = "Loading XNNPACK INT8 models…",
-                                    color = MaterialTheme.colorScheme.tertiary,
-                                    modifier = Modifier.padding(top = 2.dp)
-                                )
-                            }
-                        }
-                        uiState is PictureViewModel.PictureUiState.Loading -> {
-                            val progress = processingProgress
-                            Text(
-                                text = progress?.step ?: "Processing image…",
-                                color = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                            if (!progress?.detail.isNullOrEmpty()) {
-                                Text(
-                                    text = progress!!.detail,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 2.dp)
-                                )
-                            }
-                            if (progress != null && progress.elapsedMs > 0) {
-                                Text(
-                                    text = "Elapsed: ${progress.elapsedMs / 1000}.${(progress.elapsedMs % 1000) / 100}s",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 2.dp)
-                                )
-                            }
-                            progress?.stageTimings?.forEach { timing ->
-                                Text(
-                                    text = "  · ${timing.stage}: ${timing.durationMs}ms",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 1.dp)
-                                )
-                            }
-                        }
-                        uiState is PictureViewModel.PictureUiState.Error -> {
-                            Text(
-                                text = (uiState as PictureViewModel.PictureUiState.Error).message,
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-                        segResult != null -> {
-                            val percentText = String.format(Locale.US, "Affected area: %.2f%%", (segResult!!.percent * 100f))
-                            Text(percentText, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp))
-                            val modelLabel = currentImage?.modelName ?: "XNNPACK INT8"
-                            if (!modelLabel.isNullOrBlank()) {
-                                Text(
-                                    text = "Model: $modelLabel",
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.padding(top = 2.dp)
-                                )
-                            }
-                            processingProgress?.stageTimings?.forEach { timing ->
-                                Text(
-                                    text = "  · ${timing.stage}: ${timing.durationMs}ms",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 1.dp)
-                                )
-                            }
-                        }
-                        else -> {
-                            Text("Waiting for an image", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                        }
-                    }
-                }
-            }
+//            OutlinedCard(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 8.dp, vertical = 4.dp),
+//                colors = CardDefaults.outlinedCardColors(
+//                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
+//                )
+//            ) {
+//                Column(modifier = Modifier.padding(12.dp)) {
+//                    Text("Model: $modelLoadState", color = MaterialTheme.colorScheme.onSurface)
+//                    when {
+//                        uiState is PictureViewModel.PictureUiState.ReadyToAnalyze -> {
+//                            Text(
+//                                text = "Image ready. Tap Analyze to continue.",
+//                                color = MaterialTheme.colorScheme.primary,
+//                                modifier = Modifier.padding(top = 4.dp)
+//                            )
+//                            if (!isModelReady) {
+//                                Text(
+//                                    text = "Loading XNNPACK INT8 models…",
+//                                    color = MaterialTheme.colorScheme.tertiary,
+//                                    modifier = Modifier.padding(top = 2.dp)
+//                                )
+//                            }
+//                        }
+//                        uiState is PictureViewModel.PictureUiState.Loading -> {
+//                            val progress = processingProgress
+//                            Text(
+//                                text = progress?.step ?: "Processing image…",
+//                                color = MaterialTheme.colorScheme.tertiary,
+//                                modifier = Modifier.padding(top = 4.dp)
+//                            )
+//                            if (!progress?.detail.isNullOrEmpty()) {
+//                                Text(
+//                                    text = progress!!.detail,
+//                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                                    modifier = Modifier.padding(top = 2.dp)
+//                                )
+//                            }
+//                            if (progress != null && progress.elapsedMs > 0) {
+//                                Text(
+//                                    text = "Elapsed: ${progress.elapsedMs / 1000}.${(progress.elapsedMs % 1000) / 100}s",
+//                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                                    modifier = Modifier.padding(top = 2.dp)
+//                                )
+//                            }
+//                            progress?.stageTimings?.forEach { timing ->
+//                                Text(
+//                                    text = "  · ${timing.stage}: ${timing.durationMs}ms",
+//                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                                    modifier = Modifier.padding(top = 1.dp)
+//                                )
+//                            }
+//                        }
+//                        uiState is PictureViewModel.PictureUiState.Error -> {
+//                            Text(
+//                                text = (uiState as PictureViewModel.PictureUiState.Error).message,
+//                                color = MaterialTheme.colorScheme.error,
+//                                modifier = Modifier.padding(top = 4.dp)
+//                            )
+//                        }
+//                        segResult != null -> {
+//                            val percentText = String.format(Locale.US, "Affected area: %.2f%%", (segResult!!.percent * 100f))
+//                            Text(percentText, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp))
+//                            val modelLabel = currentImage?.modelName ?: "XNNPACK INT8"
+//                            if (!modelLabel.isNullOrBlank()) {
+//                                Text(
+//                                    text = "Model: $modelLabel",
+//                                    color = MaterialTheme.colorScheme.secondary,
+//                                    modifier = Modifier.padding(top = 2.dp)
+//                                )
+//                            }
+//                            processingProgress?.stageTimings?.forEach { timing ->
+//                                Text(
+//                                    text = "  · ${timing.stage}: ${timing.durationMs}ms",
+//                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                                    modifier = Modifier.padding(top = 1.dp)
+//                                )
+//                            }
+//                        }
+//                        else -> {
+//                            Text("Waiting for an image", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+//                        }
+//                    }
+//                }
+//            }
 
 
             Button(
